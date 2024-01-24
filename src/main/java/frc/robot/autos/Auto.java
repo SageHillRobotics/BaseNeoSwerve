@@ -15,20 +15,20 @@ import frc.robot.subsystems.Swerve;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class exampleAuto extends SequentialCommandGroup {
-  public exampleAuto(Swerve s_Swerve) {
+public class Auto extends SequentialCommandGroup {
+  private Path trajectoryPath;
+  private Trajectory trajectory;
+
+  public Auto(Swerve s_Swerve, String trajectoryJSON) {
     
     // An example trajectory to follow.  All units in meters.
-    String trajectoryJSON = "pathplanner/generatedJSON/New Path.wpilib.json";
-    Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
+    this.trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
 
-    Trajectory exampleTrajectory = new Trajectory();
     try {
-        exampleTrajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+        trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
     } catch (IOException ex) {
         DriverStation.reportError("Unable to open trajectory: " + trajectoryJSON, ex.getStackTrace());
     }
-    Trajectory marcus = exampleTrajectory;
 
     var thetaController =
         new ProfiledPIDController(
@@ -40,7 +40,7 @@ public class exampleAuto extends SequentialCommandGroup {
 
     SwerveControllerCommand swerveControllerCommand =
         new SwerveControllerCommand(
-            exampleTrajectory,
+            trajectory,
             s_Swerve::getPose,
             Constants.Swerve.swerveKinematics,
             new PIDController(Constants.AutoConstants.kPXController, 0, 0),
@@ -50,7 +50,7 @@ public class exampleAuto extends SequentialCommandGroup {
             s_Swerve);
 
     addCommands(
-        new InstantCommand(() -> s_Swerve.resetOdometry(marcus.getInitialPose())),
+        new InstantCommand(() -> s_Swerve.resetOdometry(trajectory.getInitialPose())),
         swerveControllerCommand);
   }
 }
