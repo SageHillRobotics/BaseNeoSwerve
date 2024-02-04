@@ -1,15 +1,21 @@
 package frc.robot.subsystems;
 
 import frc.robot.Constants;
+import frc.robot.subsystems.Vision;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
+import java.util.Optional;
+
+import org.photonvision.EstimatedRobotPose;
+
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
 
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -26,14 +32,16 @@ import com.pathplanner.lib.util.ReplanningConfig;
 
 public class Swerve extends SubsystemBase {
     public SwerveDriveOdometry swerveOdometry;
+    public SwerveDrivePoseEstimator swervePoseEstimator;
     public SwerveModule[] mSwerveMods;
     public Pigeon2 gyro;
+    public Vision cam;
 
     public Swerve() {
         gyro = new Pigeon2(Constants.Swerve.pigeonID);
         gyro.getConfigurator().apply(new Pigeon2Configuration());
         zeroGyro();
-
+        
         mSwerveMods = new SwerveModule[] {
             new SwerveModule(0, Constants.Swerve.Mod0.constants),
             new SwerveModule(1, Constants.Swerve.Mod1.constants),
@@ -47,7 +55,9 @@ public class Swerve extends SubsystemBase {
         Timer.delay(1.0);
         resetModulesToAbsolute();
 
+        cam = new Vision();
         swerveOdometry = new SwerveDriveOdometry(Constants.Swerve.swerveKinematics, getYaw(), getModulePositions());
+        swervePoseEstimator = new SwerveDrivePoseEstimator(Constants.Swerve.swerveKinematics, getYaw(), getModulePositions(), new Pose2d());
         
         AutoBuilder.configureHolonomic(
             this::getPose, // Robot pose supplier
@@ -155,19 +165,24 @@ public class Swerve extends SubsystemBase {
             mod.resetToAbsolute();
         }
     }
-
+     
+    
     
 
 
     @Override
     public void periodic(){
         swerveOdometry.update(getYaw(), getModulePositions());  
-        
+        swervePoseEstimator.update(getYaw(), getModulePositions());
+        //Optional<EstimatedRobotPose> globalPose = cam.getEstimatedGlobalPose(); 
+        //swervePoseEstimator.addVisionMeasurement(globalPose.get().estimatedPose.toPose2d(), globalPose.get().timestampSeconds);
         for(SwerveModule mod : mSwerveMods){
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Cancoder", mod.getCanCoder().getDegrees());
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Integrated", mod.getPosition().angle.getDegrees());
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Velocity", mod.getState().speedMetersPerSecond);    
         }
+        SmartDashboard.putNumber("Gyro reading", this.getYaw().getDegrees());
+        SmartDashboard.putNumber("Gyro absolute reading", this.getYaw().getDegrees() % 360);
     }
 
 }

@@ -13,25 +13,27 @@ public class TeleopSwerve extends Command {
   private Swerve s_Swerve;
   private DoubleSupplier translationSup;
   private DoubleSupplier strafeSup;
-  private DoubleSupplier rotationSup;
+  private BooleanSupplier cwSup;
+  private BooleanSupplier ccwSup;
   private BooleanSupplier robotCentricSup;
 
   private SlewRateLimiter translationLimiter = new SlewRateLimiter(3.0);
   private SlewRateLimiter strafeLimiter = new SlewRateLimiter(3.0);
-  private SlewRateLimiter rotationLimiter = new SlewRateLimiter(3.0);
 
   public TeleopSwerve(
       Swerve s_Swerve,
       DoubleSupplier translationSup,
       DoubleSupplier strafeSup,
-      DoubleSupplier rotationSup,
+      BooleanSupplier cwSup,
+      BooleanSupplier ccwSup,
       BooleanSupplier robotCentricSup) {
     this.s_Swerve = s_Swerve;
     addRequirements(s_Swerve);
 
     this.translationSup = translationSup;
     this.strafeSup = strafeSup;
-    this.rotationSup = rotationSup;
+    this.cwSup = cwSup;
+    this.ccwSup = ccwSup;
     this.robotCentricSup = robotCentricSup;
   }
 
@@ -40,13 +42,17 @@ public class TeleopSwerve extends Command {
     /* Get Values, Deadband*/
     double translationVal =
         translationLimiter.calculate(
-            MathUtil.applyDeadband(translationSup.getAsDouble(), 0.5));
+            MathUtil.applyDeadband(translationSup.getAsDouble(), 0.2));
     double strafeVal =
         strafeLimiter.calculate(
-            MathUtil.applyDeadband(strafeSup.getAsDouble(), 0.5));
-    double rotationVal =
-        rotationLimiter.calculate(
-            MathUtil.applyDeadband(rotationSup.getAsDouble(), 0.4));
+            MathUtil.applyDeadband(strafeSup.getAsDouble(), 0.2));
+    double rotationVal = 0;
+    if (cwSup.getAsBoolean() == true && ccwSup.getAsBoolean() == false){
+      rotationVal = -0.5;
+    }
+    else if (ccwSup.getAsBoolean() == true && cwSup.getAsBoolean() == false){
+      rotationVal = 0.5;
+    }
 
     /* Drive */
     s_Swerve.drive(
