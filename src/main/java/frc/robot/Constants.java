@@ -29,6 +29,7 @@ public final class Constants {
     public static final double wheelBase = Units.inchesToMeters(26);
     public static final double wheelDiameter = Units.inchesToMeters(4.0);
     public static final double wheelCircumference = wheelDiameter * Math.PI;
+    public static final double driveBaseRadius = Math.pow(Math.pow(Constants.Swerve.trackWidth, 2) * Math.pow(Constants.Swerve.wheelBase, 2), 0.5) / 2;
 
     public static final double openLoopRamp = 0.25;
     public static final double closedLoopRamp = 0.0;
@@ -74,7 +75,7 @@ public final class Constants {
     public static final double angleConversionFactor = 360.0 / angleGearRatio;
 
     /* Swerve Profiling Values */
-    public static final double maxSpeed = 0.5; // meters per second
+    public static final double maxSpeed = 4; // meters per second
     public static final double maxAngularVelocity = 2;
 
     /* Neutral Modes */
@@ -131,8 +132,8 @@ public final class Constants {
   }
 
   public static final class AutoConstants {
-    public static final double kMaxSpeedMetersPerSecond = 3;
-    public static final double kMaxAccelerationMetersPerSecondSquared = 3;
+    public static final double kMaxSpeedMetersPerSecond = 1;
+    public static final double kMaxAccelerationMetersPerSecondSquared = 1;
     public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
     public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
 
